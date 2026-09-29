@@ -1,0 +1,25 @@
+{
+  "name": "marketingcuration",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "chart.js": "^4.5.1",
+    "dotenv": "^17.4.2",
+    "gsap": "^3.15.0",
+    "mongodb": "^7.6.0",
+    "next": "16.3.4",
+    "playwright": "^1.63.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "resend": "^6.27.0",
+    "swiper": "^14.3.0"
+  },
+  "devDependencies": {
+    "babel-plugin-react-compiler": "1.0.0"
+  }
+}

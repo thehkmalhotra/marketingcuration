@@ -1,0 +1,1912 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PolyGraph Truth Detector</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=VT323&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --yellow: #F5E642;
+  --red: #CC0000;
+  --black: #0A0A0A;
+  --paper: #F2EDD7;
+  --paper-dark: #E8DFC8;
+  --ink: #1A1208;
+  --metal: #b0b0b0;
+  --metal-dark: #888;
+  --metal-light: #d0d0d0;
+  --green-signal: #00FF41;
+}
+
+html, body {
+  height: 100%;
+  font-family: 'Courier Prime', monospace;
+  background: #e0e0e0;
+  overflow-x: hidden;
+}
+
+/* ════════════════════════════════
+   OUTER MACHINE SHELL
+════════════════════════════════ */
+.machine-shell {
+  min-height: 100vh;
+  background: linear-gradient(160deg, #c8c8c8 0%, #b2b2b2 40%, #a8a8a8 100%);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Subtle metal texture */
+.machine-shell::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Edge shadow insets */
+.machine-shell::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  box-shadow: inset 0 0 60px rgba(0,0,0,0.18), inset 0 4px 0 rgba(255,255,255,0.4), inset 0 -4px 0 rgba(0,0,0,0.2);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ════════════════════════════════
+   TOP CONTROL PANEL
+════════════════════════════════ */
+.top-panel {
+  position: relative;
+  z-index: 2;
+  background: linear-gradient(to bottom, #c0c0c0, #b0b0b0);
+  border-bottom: 3px solid #888;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.5);
+  padding: 0 28px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+/* Logo zone */
+.logo-zone {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+.machine-logo {
+  font-family: 'Special Elite', cursive;
+  font-size: 20px;
+  color: #222;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.4);
+}
+
+.machine-logo em {
+  color: var(--red);
+  font-style: normal;
+  font-size: 22px;
+}
+
+.logo-badge {
+  background: #222;
+  color: #ddd;
+  font-family: 'Courier Prime', monospace;
+  font-size: 8px;
+  letter-spacing: 2px;
+  padding: 2px 8px;
+  border-radius: 2px;
+  text-transform: uppercase;
+}
+
+/* Jacks */
+.jacks {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.jack-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.jack {
+  width: 16px;
+  height: 16px;
+  background: radial-gradient(circle at 35% 30%, #555, #111);
+  border-radius: 50%;
+  border: 3px solid #666;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.1);
+}
+
+.jack-label {
+  font-family: 'Courier Prime', monospace;
+  font-size: 7px;
+  color: #555;
+  letter-spacing: 1px;
+}
+
+/* Knobs */
+.knobs {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.knob-unit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.knob {
+  width: 40px;
+  height: 40px;
+  background: radial-gradient(circle at 38% 32%, #888, #444, #222);
+  border-radius: 50%;
+  border: 3px solid #555;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.5), inset 0 1px 3px rgba(255,255,255,0.15);
+  position: relative;
+  cursor: pointer;
+}
+
+.knob::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 3px;
+  height: 10px;
+  background: #ddd;
+  border-radius: 2px;
+}
+
+.knob-label {
+  font-size: 7px;
+  color: #555;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-family: 'Courier Prime', monospace;
+}
+
+/* Nav links (on metal) */
+.nav-links-metal {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+}
+
+.nav-link-btn {
+  background: linear-gradient(to bottom, #ccc, #aaa);
+  border: 1px solid #888;
+  border-radius: 3px;
+  color: #333;
+  font-family: 'Special Elite', cursive;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 6px 14px;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.5);
+  text-decoration: none;
+  transition: all 0.1s;
+}
+
+.nav-link-btn:hover {
+  background: linear-gradient(to bottom, #ddd, #bbb);
+  transform: translateY(-1px);
+}
+
+/* Toggles */
+.toggles {
+  display: flex;
+  gap: 8px;
+}
+
+.toggle {
+  width: 32px;
+  height: 52px;
+  background: linear-gradient(to bottom, #d0d0d0, #b0b0b0);
+  border-radius: 4px;
+  border: 2px solid #888;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.3), inset 0 1px 2px rgba(255,255,255,0.5);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px;
+}
+
+.toggle-knob {
+  width: 22px;
+  height: 18px;
+  background: linear-gradient(to bottom, #e8e8e8, #ccc);
+  border-radius: 3px;
+  border: 1px solid #999;
+  box-shadow: 0 2px 3px rgba(0,0,0,0.3);
+}
+
+.toggle-num {
+  font-size: 7px;
+  color: #666;
+  font-family: 'Courier Prime', monospace;
+}
+
+/* Pay button — styled as a metal key */
+.pay-btn {
+  background: linear-gradient(to bottom, #444, #222);
+  color: var(--yellow);
+  font-family: 'Special Elite', cursive;
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  padding: 10px 18px;
+  border: 2px solid #111;
+  border-radius: 3px;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #000, inset 0 1px 0 rgba(255,255,255,0.1);
+  transition: all 0.1s;
+  flex-shrink: 0;
+}
+
+.pay-btn:hover { background: linear-gradient(to bottom, #555, #333); }
+.pay-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #000; }
+
+/* ════════════════════════════════
+   MAIN BODY
+════════════════════════════════ */
+.main-body {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 320px 28px 1fr 260px;
+  flex: 1;
+  min-height: calc(100vh - 72px);
+}
+
+/* ════════════════════════════════
+   PAPER STRIP (LEFT)
+════════════════════════════════ */
+.paper-strip-col {
+  position: relative;
+  overflow: hidden;
+  background: var(--paper);
+  display: flex;
+  flex-direction: column;
+}
+
+/* graph-paper lines */
+.paper-strip-col::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 23px, rgba(100,149,237,0.12) 23px, rgba(100,149,237,0.12) 24px),
+    repeating-linear-gradient(90deg, transparent, transparent 23px, rgba(100,149,237,0.12) 23px, rgba(100,149,237,0.12) 24px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Hole-punch strip on left edge */
+.hole-strip {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 28px;
+  background: var(--paper-dark);
+  border-right: 1px solid rgba(0,0,0,0.08);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 0;
+  gap: 32px;
+}
+
+.hole {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #c8c8c8;
+  border: 1px solid #aaa;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.4), 0 0 0 2px var(--paper-dark);
+}
+
+/* Paper content */
+.paper-content-wrap {
+  padding: 18px 14px 18px 38px;
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  /* Hidden until GSAP reveals */
+  clip-path: inset(0 0 100% 0);
+}
+
+.paper-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px dashed #bbb;
+  padding-bottom: 6px;
+  margin-bottom: 10px;
+}
+
+.paper-hdr {
+  font-family: 'Special Elite', cursive;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: #666;
+  text-transform: uppercase;
+}
+
+.paper-ser {
+  font-family: 'Courier Prime', monospace;
+  font-size: 8px;
+  color: #999;
+  letter-spacing: 1px;
+}
+
+.paper-title-main {
+  font-family: 'Special Elite', cursive;
+  font-size: 12px;
+  color: var(--ink);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+/* Divider tape */
+.tape-div {
+  height: 3px;
+  margin: 10px 0;
+  background: repeating-linear-gradient(90deg, #888 0px, #888 10px, #bbb 10px, #bbb 12px);
+}
+
+/* Graph rows */
+.graph-rows {
+  margin-bottom: 10px;
+}
+
+.graph-row {
+  display: flex;
+  height: 28px;
+  margin-bottom: 3px;
+  overflow: hidden;
+  background: white;
+  border: 1px solid #ddd;
+}
+
+.graph-row-label {
+  width: 60px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  padding-left: 6px;
+  font-family: 'Courier Prime', monospace;
+  font-size: 8px;
+  color: #777;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  background: #f8f6f0;
+  border-right: 1px solid #e0e0e0;
+}
+
+.graph-row-canvas-wrap {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.graph-row-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Result strip */
+.result-strip {
+  background: white;
+  border: 1px solid #ccc;
+  border-left: 3px solid #555;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+}
+
+.result-label {
+  font-family: 'Courier Prime', monospace;
+  font-size: 8px;
+  letter-spacing: 2px;
+  color: #999;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.result-text {
+  font-family: 'Courier Prime', monospace;
+  font-size: 11px;
+  color: var(--ink);
+  line-height: 1.7;
+  white-space: pre-wrap;
+  min-height: 60px;
+}
+
+.typing-cursor {
+  display: inline-block;
+  width: 7px;
+  height: 12px;
+  background: var(--ink);
+  margin-left: 2px;
+  animation: blink 0.7s infinite;
+  vertical-align: middle;
+}
+
+@keyframes blink {
+  0%,50% { opacity: 1; }
+  51%,100% { opacity: 0; }
+}
+
+/* Readings table */
+.readings-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 9px;
+  font-family: 'Courier Prime', monospace;
+  margin-bottom: 10px;
+}
+
+.readings-table th {
+  background: #333;
+  color: #ddd;
+  padding: 3px 5px;
+  text-align: left;
+  letter-spacing: 1px;
+  font-size: 8px;
+  font-weight: normal;
+}
+
+.readings-table td {
+  padding: 3px 5px;
+  border-bottom: 1px dotted #ddd;
+  color: #333;
+}
+
+.readings-table tr:nth-child(even) td { background: rgba(0,0,0,0.03); }
+
+.r-dot {
+  display: inline-block;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  margin-right: 3px;
+  vertical-align: middle;
+}
+
+.r-normal { background: #3a8a3a; }
+.r-elevated { background: #d07700; }
+.r-critical { background: #cc0000; }
+
+/* Verdict stamp */
+.verdict-stamp {
+  text-align: center;
+  margin: 10px 0;
+  padding: 8px;
+  border: 2px solid #555;
+  position: relative;
+  opacity: 0;
+  transform: rotate(-5deg);
+}
+
+.verdict-stamp::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border: 1px solid rgba(0,0,0,0.2);
+}
+
+.verdict-stamp-text {
+  font-family: 'Special Elite', cursive;
+  font-size: 16px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: #333;
+}
+
+.verdict-stamp-sub {
+  font-family: 'Courier Prime', monospace;
+  font-size: 7px;
+  letter-spacing: 2px;
+  color: #888;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.paper-date {
+  font-family: 'Courier Prime', monospace;
+  font-size: 8px;
+  color: #aaa;
+  text-align: right;
+  border-top: 1px dashed #ccc;
+  padding-top: 6px;
+  margin-top: 10px;
+}
+
+/* ════════════════════════════════
+   MACHINE SLOT (paper exit)
+════════════════════════════════ */
+.slot-col {
+  background: linear-gradient(to right, #777, #888, #777);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 20px;
+  gap: 12px;
+  position: relative;
+  border-left: 3px solid #666;
+  border-right: 3px solid #999;
+  box-shadow: inset 2px 0 6px rgba(0,0,0,0.2), inset -2px 0 6px rgba(0,0,0,0.1);
+}
+
+.slot-roller {
+  width: 20px;
+  height: 14px;
+  background: linear-gradient(to bottom, #999, #666);
+  border-radius: 3px;
+  border: 1px solid #555;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+}
+
+.slot-line {
+  flex: 1;
+  width: 2px;
+  background: rgba(0,0,0,0.15);
+}
+
+/* ════════════════════════════════
+   LIVE GRAPH WINDOW (center)
+════════════════════════════════ */
+.graph-window-col {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(to bottom, #c0c0c0, #b8b8b8);
+}
+
+.graph-window-inner {
+  flex: 1;
+  margin: 18px 12px;
+  background: white;
+  border: 3px solid #888;
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 4px 12px rgba(0,0,0,0.25), 0 2px 4px rgba(255,255,255,0.3);
+}
+
+/* Clamp bars */
+.clamp-bar {
+  position: absolute;
+  left: 0; right: 0;
+  height: 18px;
+  background: linear-gradient(to bottom, #aaa, #888);
+  border: 1px solid #777;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+
+.clamp-bar.top { top: 0; border-radius: 2px 2px 0 0; }
+.clamp-bar.bot { bottom: 0; border-radius: 0 0 2px 2px; }
+
+.clamp-screw {
+  width: 11px; height: 11px;
+  background: radial-gradient(circle at 38% 32%, #ccc, #777, #444);
+  border-radius: 50%;
+  border: 1px solid #555;
+  position: relative;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+}
+
+.clamp-screw::after {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%) rotate(45deg);
+  width: 7px; height: 1.5px;
+  background: #333;
+}
+
+.graph-canvas-wrap {
+  position: absolute;
+  top: 18px; bottom: 18px; left: 0; right: 0;
+  overflow: hidden;
+}
+
+.graph-canvas-wrap::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 23px, rgba(100,149,237,0.12) 23px, rgba(100,149,237,0.12) 24px),
+    repeating-linear-gradient(90deg, transparent, transparent 23px, rgba(100,149,237,0.12) 23px, rgba(100,149,237,0.12) 24px);
+  pointer-events: none;
+  z-index: 1;
+}
+
+#liveCanvas { display: block; width: 100%; height: 100%; }
+
+/* ════════════════════════════════
+   RIGHT PANEL — FORM
+════════════════════════════════ */
+.form-col {
+  background: linear-gradient(to bottom, #bbb, #aaa);
+  border-left: 3px solid #888;
+  box-shadow: inset 2px 0 8px rgba(0,0,0,0.15);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* Sensor ports (right edge) */
+.sensor-ports {
+  position: absolute;
+  right: -18px;
+  top: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  z-index: 5;
+}
+
+.port {
+  display: flex;
+  align-items: center;
+}
+
+.port-wire {
+  width: 16px;
+  height: 2px;
+  background: #777;
+}
+
+.port-jack {
+  width: 13px; height: 13px;
+  background: radial-gradient(circle at 35% 30%, #666, #222);
+  border-radius: 50%;
+  border: 2px solid #555;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+/* Scrollable form body */
+.form-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px 18px 18px 16px;
+  scrollbar-width: thin;
+  scrollbar-color: #888 #bbb;
+}
+
+.form-scroll::-webkit-scrollbar { width: 5px; }
+.form-scroll::-webkit-scrollbar-track { background: #bbb; }
+.form-scroll::-webkit-scrollbar-thumb { background: #888; border-radius: 2px; }
+
+/* Hero */
+.hero-sec {
+  margin-bottom: 18px;
+  border-bottom: 2px solid rgba(0,0,0,0.1);
+  padding-bottom: 14px;
+}
+
+.hero-badge {
+  display: inline-block;
+  background: #333;
+  color: #ddd;
+  font-family: 'Courier Prime', monospace;
+  font-size: 8px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  margin-bottom: 8px;
+  border-radius: 2px;
+}
+
+.hero-title {
+  font-family: 'Special Elite', cursive;
+  font-size: 22px;
+  color: #222;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.4);
+  line-height: 1.2;
+  margin-bottom: 6px;
+}
+
+.hero-title em {
+  color: var(--red);
+  font-style: normal;
+  display: block;
+  font-size: 18px;
+}
+
+.hero-sub {
+  font-family: 'Courier Prime', monospace;
+  font-size: 9px;
+  color: #666;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+/* Sections */
+.form-section {
+  margin-bottom: 16px;
+}
+
+.sec-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.sec-num {
+  width: 22px; height: 22px;
+  background: #333;
+  color: #ddd;
+  font-family: 'Special Elite', cursive;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 2px;
+}
+
+.sec-title {
+  font-family: 'Special Elite', cursive;
+  font-size: 11px;
+  color: #333;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+.sec-line {
+  flex: 1;
+  height: 1px;
+  background: rgba(0,0,0,0.15);
+}
+
+/* Form grid */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.form-grid.full { grid-template-columns: 1fr; }
+
+.field-g {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.field-lbl {
+  font-family: 'Courier Prime', monospace;
+  font-size: 8px;
+  color: #555;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.field-inp,
+.field-sel,
+.field-ta {
+  background: #f0efe8;
+  border: 1px solid #999;
+  border-bottom: 2px solid #777;
+  padding: 7px 8px;
+  font-family: 'Courier Prime', monospace;
+  font-size: 12px;
+  color: #222;
+  outline: none;
+  border-radius: 2px;
+  width: 100%;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+.field-inp:focus,
+.field-sel:focus,
+.field-ta:focus {
+  border-color: #444;
+  border-bottom-color: #111;
+  box-shadow: 0 2px 0 #333;
+  background: #fff;
+}
+
+.field-inp.filled,
+.field-sel.filled,
+.field-ta.filled {
+  background: #faf9f0;
+  border-bottom-color: #444;
+}
+
+.field-inp::placeholder,
+.field-ta::placeholder { color: #aaa; font-style: italic; font-size: 11px; }
+
+.field-sel {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M5 6L0 0h10z' fill='%23666'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-color: #f0efe8;
+  cursor: pointer;
+}
+
+.field-sel option { background: #f0efe8; }
+.field-ta { resize: none; height: 52px; line-height: 1.5; }
+
+/* Radio */
+.radio-group { display: flex; flex-direction: column; gap: 6px; }
+
+.radio-opt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.radio-opt input[type="radio"] {
+  appearance: none;
+  width: 14px; height: 14px;
+  border: 2px solid #888;
+  border-radius: 50%;
+  background: #f0efe8;
+  cursor: pointer;
+  position: relative;
+  flex-shrink: 0;
+  transition: border-color 0.2s;
+}
+
+.radio-opt input[type="radio"]:checked { border-color: #333; }
+
+.radio-opt input[type="radio"]:checked::after {
+  content: '';
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 6px; height: 6px;
+  background: #333;
+  border-radius: 50%;
+}
+
+.radio-lbl { font-family: 'Courier Prime', monospace; font-size: 10px; color: #444; letter-spacing: 0.5px; }
+
+/* Checkboxes */
+.check-group { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.check-opt {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #e8e6de;
+  border: 1px solid #aaa;
+  padding: 4px 8px;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: background 0.2s;
+}
+
+.check-opt:hover { background: #ddd; }
+
+.check-opt input[type="checkbox"] {
+  appearance: none;
+  width: 12px; height: 12px;
+  border: 2px solid #888;
+  background: #f0efe8;
+  cursor: pointer;
+  position: relative;
+  flex-shrink: 0;
+  border-radius: 1px;
+}
+
+.check-opt input[type="checkbox"]:checked { border-color: #333; background: #333; }
+
+.check-opt input[type="checkbox"]:checked::after {
+  content: '✓';
+  position: absolute;
+  top: -3px; left: 0;
+  color: white;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.check-lbl { font-family: 'Courier Prime', monospace; font-size: 9px; color: #555; letter-spacing: 1px; text-transform: uppercase; }
+
+/* Slider */
+.vintage-slider {
+  width: 100%;
+  appearance: none;
+  height: 5px;
+  background: repeating-linear-gradient(90deg, #888 0px, #888 4px, #bbb 4px, #bbb 8px);
+  outline: none;
+  cursor: pointer;
+  border: 1px solid #999;
+}
+
+.vintage-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 18px; height: 18px;
+  background: linear-gradient(135deg, #ddd, #aaa);
+  border: 2px solid #666;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+  border-radius: 2px;
+}
+
+.slider-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 8px;
+  color: #666;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-top: 3px;
+  font-family: 'Courier Prime', monospace;
+}
+
+/* Progress dots */
+.progress-dots {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+  margin: 6px 0;
+}
+
+.p-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #bbb;
+  border: 1px solid #999;
+  transition: background 0.3s, box-shadow 0.3s;
+}
+
+.p-dot.done {
+  background: #333;
+  box-shadow: 0 0 4px rgba(0,0,0,0.4);
+}
+
+/* Submit */
+.submit-btn {
+  width: 100%;
+  background: linear-gradient(to bottom, #444, #222);
+  color: #ddd;
+  font-family: 'Special Elite', cursive;
+  font-size: 13px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  padding: 14px;
+  border: 2px solid #111;
+  border-radius: 3px;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #000, inset 0 1px 0 rgba(255,255,255,0.1);
+  transition: all 0.1s;
+  margin-top: 4px;
+  position: relative;
+  overflow: hidden;
+}
+
+.submit-btn::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%; width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+  transition: left 0.4s;
+}
+
+.submit-btn:hover::before { left: 100%; }
+.submit-btn:hover { background: linear-gradient(to bottom, #555, #333); }
+.submit-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #000; }
+
+.submit-disc {
+  font-family: 'Courier Prime', monospace;
+  font-size: 8px;
+  color: #777;
+  letter-spacing: 1px;
+  text-align: center;
+  line-height: 1.6;
+  margin-top: 8px;
+}
+
+/* Status bar */
+.status-bar {
+  background: linear-gradient(to bottom, #999, #888);
+  border-top: 2px solid #777;
+  padding: 8px 14px;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Courier Prime', monospace;
+  font-size: 8px;
+  color: #444;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.led {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,0.3);
+  flex-shrink: 0;
+}
+
+.led-green {
+  background: var(--green-signal);
+  box-shadow: 0 0 6px var(--green-signal);
+  animation: led-pulse 2s infinite;
+}
+
+.led-red {
+  background: var(--red);
+  box-shadow: 0 0 6px var(--red);
+  animation: led-pulse 1.5s infinite;
+}
+
+.led-yellow {
+  background: #ddcc00;
+  box-shadow: 0 0 6px #ddcc00;
+  animation: led-pulse 3s infinite;
+}
+
+@keyframes led-pulse {
+  0%,100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.clock-display {
+  margin-left: auto;
+  font-family: 'Courier Prime', monospace;
+  font-size: 10px;
+  color: #444;
+  letter-spacing: 2px;
+}
+
+/* ════════════════════════════════
+   PROCESSING OVERLAY
+════════════════════════════════ */
+.proc-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(180,180,180,0.92);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 20px;
+  backdrop-filter: blur(3px);
+}
+
+.proc-overlay.active { display: flex; }
+
+.proc-text {
+  font-family: 'VT323', monospace;
+  font-size: 28px;
+  color: #222;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  animation: proc-flicker 0.6s infinite;
+}
+
+@keyframes proc-flicker {
+  0%,100% { opacity: 1; }
+  92% { opacity: 1; }
+  93% { opacity: 0; }
+  95% { opacity: 1; }
+  98% { opacity: 0; }
+  99% { opacity: 1; }
+}
+
+.proc-bar-wrap {
+  width: 280px;
+  height: 5px;
+  background: #bbb;
+  border: 1px solid #888;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.proc-bar-fill {
+  height: 100%;
+  background: #333;
+  width: 0;
+  border-radius: 2px;
+  animation: proc-fill 2.5s ease-out forwards;
+}
+
+@keyframes proc-fill {
+  0% { width: 0; }
+  30% { width: 40%; }
+  60% { width: 68%; }
+  80% { width: 84%; }
+  100% { width: 100%; }
+}
+
+/* ════════════════════════════════
+   RESPONSIVE
+════════════════════════════════ */
+@media (max-width: 1000px) {
+  .main-body { grid-template-columns: 1fr; }
+  .slot-col, .graph-window-col { display: none; }
+  .sensor-ports { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- PROCESSING OVERLAY -->
+<div class="proc-overlay" id="procOverlay">
+  <div class="proc-text" id="procText">ANALYZING SUBJECT...</div>
+  <div class="proc-bar-wrap">
+    <div class="proc-bar-fill" id="procBar"></div>
+  </div>
+</div>
+
+<div class="machine-shell">
+
+  <!-- ═══ TOP CONTROL PANEL ═══ -->
+  <div class="top-panel">
+    <!-- Logo -->
+    <div class="logo-zone">
+      <div class="machine-logo"><em>■</em> POLY·GRAPH</div>
+      <div class="logo-badge">UNIT 94-B</div>
+    </div>
+
+    <!-- Jacks -->
+    <div class="jacks">
+      <div class="jack-group"><div class="jack"></div><div class="jack-label">4</div></div>
+      <div class="jack-group"><div class="jack"></div><div class="jack-label">3</div></div>
+      <div class="jack-group"><div class="jack"></div><div class="jack-label">2</div></div>
+      <div class="jack-group"><div class="jack"></div><div class="jack-label">1</div></div>
+    </div>
+
+    <!-- Knobs -->
+    <div class="knobs">
+      <div class="knob-unit"><div class="knob" id="k1"></div><div class="knob-label">MIN MAX</div></div>
+      <div class="knob-unit"><div class="knob" id="k2"></div><div class="knob-label">MIN MAX</div></div>
+      <div class="knob-unit"><div class="knob" id="k3"></div><div class="knob-label">MIN MAX</div></div>
+      <div class="knob-unit"><div class="knob" id="k4"></div><div class="knob-label">MIN MAX</div></div>
+    </div>
+
+    <!-- Nav links -->
+    <div class="nav-links-metal">
+      <a class="nav-link-btn" href="#">ARCHIVE</a>
+      <a class="nav-link-btn" href="#">RECORDS</a>
+      <a class="nav-link-btn" href="#">ABOUT</a>
+    </div>
+
+    <!-- Toggles -->
+    <div class="toggles">
+      <div class="toggle"><div class="toggle-knob"></div><span class="toggle-num">1</span></div>
+      <div class="toggle"><div class="toggle-knob"></div><span class="toggle-num">2</span></div>
+      <div class="toggle"><div class="toggle-knob"></div><span class="toggle-num">3</span></div>
+      <div class="toggle"><div class="toggle-knob"></div><span class="toggle-num">4</span></div>
+    </div>
+
+    <!-- Pay -->
+    <button class="pay-btn">■ PAY NOW</button>
+  </div>
+
+  <!-- ═══ MAIN BODY ═══ -->
+  <div class="main-body">
+
+    <!-- LEFT: PAPER STRIP -->
+    <div class="paper-strip-col">
+      <div class="hole-strip" id="holeStrip">
+        <!-- holes injected by JS -->
+      </div>
+      <div class="paper-content-wrap" id="paperContentWrap">
+        <div class="paper-header-row">
+          <span class="paper-hdr">POLYGRAPH UNIT MODEL 94-B</span>
+          <span class="paper-ser">SER. #00441</span>
+        </div>
+        <div class="paper-title-main">SUBJECT ANALYSIS PRINTOUT</div>
+
+        <div class="tape-div"></div>
+
+        <!-- Graph rows -->
+        <div class="graph-rows">
+          <div class="graph-row">
+            <div class="graph-row-label">PULSE</div>
+            <div class="graph-row-canvas-wrap">
+              <canvas class="graph-row-canvas" id="wave1"></canvas>
+            </div>
+          </div>
+          <div class="graph-row">
+            <div class="graph-row-label">RESP.</div>
+            <div class="graph-row-canvas-wrap">
+              <canvas class="graph-row-canvas" id="wave2"></canvas>
+            </div>
+          </div>
+          <div class="graph-row">
+            <div class="graph-row-label">GSR</div>
+            <div class="graph-row-canvas-wrap">
+              <canvas class="graph-row-canvas" id="wave3"></canvas>
+            </div>
+          </div>
+          <div class="graph-row">
+            <div class="graph-row-label">BLOOD P.</div>
+            <div class="graph-row-canvas-wrap">
+              <canvas class="graph-row-canvas" id="wave4"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="tape-div"></div>
+
+        <!-- Result -->
+        <div class="result-strip">
+          <div class="result-label">ANALYSIS OUTPUT</div>
+          <div class="result-text" id="resultText"><span class="typing-cursor"></span></div>
+        </div>
+
+        <!-- Readings table -->
+        <table class="readings-table" id="readingsTable" style="display:none">
+          <thead>
+            <tr>
+              <th>PARAMETER</th>
+              <th>VALUE</th>
+              <th>STATUS</th>
+            </tr>
+          </thead>
+          <tbody id="readingsBody"></tbody>
+        </table>
+
+        <!-- Verdict stamp -->
+        <div id="verdictStamp" class="verdict-stamp">
+          <div class="verdict-stamp-text" id="verdictText">PROCESSING</div>
+          <div class="verdict-stamp-sub">POLYGRAPH EXAMINATION RESULT</div>
+        </div>
+
+        <div class="paper-date" id="paperDate"></div>
+      </div>
+    </div>
+
+    <!-- SLOT -->
+    <div class="slot-col">
+      <div class="slot-roller"></div>
+      <div class="slot-line"></div>
+      <div class="slot-roller"></div>
+    </div>
+
+    <!-- LIVE GRAPH WINDOW -->
+    <div class="graph-window-col">
+      <div class="graph-window-inner">
+        <div class="clamp-bar top">
+          <div class="clamp-screw"></div>
+          <div class="clamp-screw"></div>
+          <div class="clamp-screw"></div>
+          <div class="clamp-screw"></div>
+        </div>
+        <div class="clamp-bar bot">
+          <div class="clamp-screw"></div>
+          <div class="clamp-screw"></div>
+          <div class="clamp-screw"></div>
+          <div class="clamp-screw"></div>
+        </div>
+        <div class="graph-canvas-wrap">
+          <canvas id="liveCanvas"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: FORM PANEL -->
+    <div class="form-col">
+      <!-- Sensor ports -->
+      <div class="sensor-ports">
+        <div class="port"><div class="port-wire"></div><div class="port-jack"></div></div>
+        <div class="port"><div class="port-wire"></div><div class="port-jack"></div></div>
+        <div class="port"><div class="port-wire"></div><div class="port-jack"></div></div>
+        <div class="port"><div class="port-wire"></div><div class="port-jack"></div></div>
+      </div>
+
+      <div class="form-scroll">
+        <!-- HERO -->
+        <div class="hero-sec">
+          <div class="hero-badge">■ TRUTH DETECTION SYSTEM V.94</div>
+          <div class="hero-title">THE MACHINE<em>NEVER LIES.</em></div>
+          <div class="hero-sub">// COMPLETE SUBJECT PROFILE //</div>
+        </div>
+
+        <!-- SECTION 1 -->
+        <div class="form-section">
+          <div class="sec-header">
+            <div class="sec-num">01</div>
+            <div class="sec-title">Subject Info</div>
+            <div class="sec-line"></div>
+          </div>
+          <div class="form-grid">
+            <div class="field-g">
+              <label class="field-lbl">Full Name</label>
+              <input type="text" class="field-inp" id="fullName" placeholder="Last, First" />
+            </div>
+            <div class="field-g">
+              <label class="field-lbl">Subject ID</label>
+              <input type="text" class="field-inp" id="subjectId" placeholder="94-0441" />
+            </div>
+            <div class="field-g">
+              <label class="field-lbl">Date of Birth</label>
+              <input type="text" class="field-inp" id="dob" placeholder="MM/DD/YYYY" />
+            </div>
+            <div class="field-g">
+              <label class="field-lbl">Case Reference</label>
+              <input type="text" class="field-inp" id="caseRef" placeholder="CASE-####" />
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 2 -->
+        <div class="form-section">
+          <div class="sec-header">
+            <div class="sec-num">02</div>
+            <div class="sec-title">Physical Baseline</div>
+            <div class="sec-line"></div>
+          </div>
+          <div class="form-grid">
+            <div class="field-g">
+              <label class="field-lbl">Heart Rate (BPM)</label>
+              <input type="number" class="field-inp" id="heartRate" placeholder="72" min="40" max="200" />
+            </div>
+            <div class="field-g">
+              <label class="field-lbl">Blood Pressure</label>
+              <input type="text" class="field-inp" id="bloodPressure" placeholder="120/80" />
+            </div>
+            <div class="field-g">
+              <label class="field-lbl">Respiration Rate</label>
+              <input type="number" class="field-inp" id="respRate" placeholder="16" />
+            </div>
+            <div class="field-g">
+              <label class="field-lbl">Galvanic Skin</label>
+              <select class="field-sel" id="gsr">
+                <option value="">-- SELECT --</option>
+                <option>NORMAL</option>
+                <option>ELEVATED</option>
+                <option>HIGH</option>
+                <option>CRITICAL</option>
+              </select>
+            </div>
+          </div>
+          <div style="margin-top:10px">
+            <div class="field-g">
+              <label class="field-lbl">Stress Level Estimate</label>
+              <input type="range" class="vintage-slider" id="stressLevel" min="1" max="10" value="5"
+                     oninput="updateSlider(this.value)" />
+              <div class="slider-labels">
+                <span>CALM [1]</span>
+                <span id="sliderVal">5</span>
+                <span>CRITICAL [10]</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 3 -->
+        <div class="form-section">
+          <div class="sec-header">
+            <div class="sec-num">03</div>
+            <div class="sec-title">Deception Indicators</div>
+            <div class="sec-line"></div>
+          </div>
+          <div class="field-g" style="margin-bottom:10px">
+            <label class="field-lbl">Demeanor During Questioning</label>
+            <div class="radio-group">
+              <label class="radio-opt">
+                <input type="radio" name="demeanor" value="cooperative" />
+                <span class="radio-lbl">COOPERATIVE — Calm, responsive</span>
+              </label>
+              <label class="radio-opt">
+                <input type="radio" name="demeanor" value="nervous" />
+                <span class="radio-lbl">NERVOUS — Fidgeting, avoiding</span>
+              </label>
+              <label class="radio-opt">
+                <input type="radio" name="demeanor" value="evasive" />
+                <span class="radio-lbl">EVASIVE — Deflecting, inconsistent</span>
+              </label>
+              <label class="radio-opt">
+                <input type="radio" name="demeanor" value="hostile" />
+                <span class="radio-lbl">HOSTILE — Aggressive, combative</span>
+              </label>
+            </div>
+          </div>
+          <label class="field-lbl" style="display:block;margin-bottom:6px">Observed Micro-Expressions</label>
+          <div class="check-group">
+            <label class="check-opt"><input type="checkbox" value="eye_dart" /><span class="check-lbl">Eye Dart</span></label>
+            <label class="check-opt"><input type="checkbox" value="lip_compress" /><span class="check-lbl">Lip Compress</span></label>
+            <label class="check-opt"><input type="checkbox" value="nostril_flare" /><span class="check-lbl">Nostril Flare</span></label>
+            <label class="check-opt"><input type="checkbox" value="brow_raise" /><span class="check-lbl">Brow Raise</span></label>
+            <label class="check-opt"><input type="checkbox" value="jaw_clench" /><span class="check-lbl">Jaw Clench</span></label>
+            <label class="check-opt"><input type="checkbox" value="sweat" /><span class="check-lbl">Perspiration</span></label>
+          </div>
+        </div>
+
+        <!-- SECTION 4 -->
+        <div class="form-section">
+          <div class="sec-header">
+            <div class="sec-num">04</div>
+            <div class="sec-title">Examiner Notes</div>
+            <div class="sec-line"></div>
+          </div>
+          <div class="field-g">
+            <label class="field-lbl">Additional Observations</label>
+            <textarea class="field-ta" id="examinerNotes" placeholder="Record observations..."></textarea>
+          </div>
+        </div>
+
+        <!-- Progress dots -->
+        <div class="progress-dots" id="progressDots">
+          <div class="p-dot" id="pd0"></div>
+          <div class="p-dot" id="pd1"></div>
+          <div class="p-dot" id="pd2"></div>
+          <div class="p-dot" id="pd3"></div>
+          <div class="p-dot" id="pd4"></div>
+          <div class="p-dot" id="pd5"></div>
+          <div class="p-dot" id="pd6"></div>
+          <div class="p-dot" id="pd7"></div>
+        </div>
+
+        <!-- Submit -->
+        <button class="submit-btn" id="submitBtn" onclick="submitForm()">
+          ■ INITIATE ANALYSIS ■
+        </button>
+        <div class="submit-disc">
+          BY SUBMITTING YOU AUTHORIZE FULL PSYCHO-PHYSIOLOGICAL EXAMINATION<br>
+          UNIT 94-B · RESULTS ADMISSIBLE IN INTERNAL PROCEEDINGS
+        </div>
+      </div>
+
+      <!-- Status bar -->
+      <div class="status-bar">
+        <div class="status-item"><div class="led led-green"></div><span>ONLINE</span></div>
+        <div class="status-item"><div class="led led-yellow"></div><span>AWAITING</span></div>
+        <div class="status-item"><div class="led led-red"></div><span>REC</span></div>
+        <div class="clock-display" id="clockDisplay">--:--:--</div>
+      </div>
+    </div>
+
+  </div><!-- end main-body -->
+</div><!-- end machine-shell -->
+
+<script>
+/* ══════════════════════════════════════
+   INIT HOLES
+══════════════════════════════════════ */
+const holeStrip = document.getElementById('holeStrip');
+for (let i = 0; i < 18; i++) {
+  const h = document.createElement('div');
+  h.className = 'hole';
+  holeStrip.appendChild(h);
+}
+
+/* ══════════════════════════════════════
+   CLOCK
+══════════════════════════════════════ */
+function updateClock() {
+  const n = new Date();
+  document.getElementById('clockDisplay').textContent =
+    String(n.getHours()).padStart(2,'0') + ':' +
+    String(n.getMinutes()).padStart(2,'0') + ':' +
+    String(n.getSeconds()).padStart(2,'0');
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+/* ══════════════════════════════════════
+   KNOB ANIMATION
+══════════════════════════════════════ */
+['k1','k2','k3','k4'].forEach((id, i) => {
+  gsap.to('#'+id, {
+    rotation: 25 + i * 12,
+    duration: 2 + i * 0.4,
+    repeat: -1,
+    yoyo: true,
+    ease: 'sine.inOut',
+    delay: i * 0.25
+  });
+});
+
+/* ══════════════════════════════════════
+   LIVE GRAPH
+══════════════════════════════════════ */
+const liveCanvas = document.getElementById('liveCanvas');
+const liveCtx = liveCanvas.getContext('2d');
+let liveT = 0;
+let globalStress = 5;
+
+const channels = [
+  { amp: 14, freq: 0.04, phase: 0,   speed: 0.012, noiseAmp: 3 },
+  { amp: 8,  freq: 0.08, phase: 1.2, speed: 0.018, noiseAmp: 5 },
+  { amp: 12, freq: 0.03, phase: 2.5, speed: 0.010, noiseAmp: 2 },
+  { amp: 6,  freq: 0.12, phase: 0.7, speed: 0.022, noiseAmp: 6 },
+];
+const history = channels.map(() => []);
+const MAX_HIST = 2000;
+
+function resizeLive() {
+  const wrap = liveCanvas.parentElement;
+  liveCanvas.width = wrap.clientWidth;
+  liveCanvas.height = wrap.clientHeight;
+}
+resizeLive();
+window.addEventListener('resize', resizeLive);
+
+function drawLive() {
+  const w = liveCanvas.width, h = liveCanvas.height;
+  if (!w || !h) { requestAnimationFrame(drawLive); return; }
+
+  liveCtx.clearRect(0, 0, w, h);
+
+  // Grid
+  liveCtx.strokeStyle = 'rgba(100,149,237,0.1)';
+  liveCtx.lineWidth = 1;
+  for (let x = 0; x < w; x += 24) {
+    liveCtx.beginPath(); liveCtx.moveTo(x,0); liveCtx.lineTo(x,h); liveCtx.stroke();
+  }
+  for (let y = 0; y < h; y += 24) {
+    liveCtx.beginPath(); liveCtx.moveTo(0,y); liveCtx.lineTo(w,y); liveCtx.stroke();
+  }
+
+  const rowH = h / channels.length;
+  const sm = 0.5 + (globalStress / 10) * 1.5;
+
+  channels.forEach((ch, i) => {
+    const cy = rowH * i + rowH * 0.5;
+    const noise = (Math.random() - 0.5) * ch.noiseAmp * sm;
+    const val = Math.sin(liveT * ch.freq * sm + ch.phase) * ch.amp * sm
+              + Math.sin(liveT * ch.freq * 2.3 + ch.phase) * ch.amp * 0.3 * sm
+              + noise;
+    history[i].push(val);
+    if (history[i].length > MAX_HIST) history[i].shift();
+
+    liveCtx.beginPath();
+    liveCtx.strokeStyle = '#6495ED';
+    liveCtx.lineWidth = 1.3;
+    const pts = history[i];
+    const sx = Math.max(0, w - pts.length);
+    pts.forEach((v, j) => {
+      const x = sx + j, y = cy + v;
+      if (j === 0) liveCtx.moveTo(x, y); else liveCtx.lineTo(x, y);
+    });
+    liveCtx.stroke();
+
+    if (i < channels.length - 1) {
+      liveCtx.setLineDash([3,5]);
+      liveCtx.strokeStyle = 'rgba(0,0,0,0.07)';
+      liveCtx.lineWidth = 1;
+      liveCtx.beginPath();
+      liveCtx.moveTo(0, rowH*(i+1)); liveCtx.lineTo(w, rowH*(i+1));
+      liveCtx.stroke();
+      liveCtx.setLineDash([]);
+    }
+  });
+
+  liveT++;
+  requestAnimationFrame(drawLive);
+}
+drawLive();
+
+/* ══════════════════════════════════════
+   PAPER WAVES
+══════════════════════════════════════ */
+function drawWave(id, amp, freq, color, noiseAmt, delay) {
+  setTimeout(() => {
+    const canvas = document.getElementById(id);
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.offsetWidth || 200;
+    const h = canvas.offsetHeight || 28;
+    canvas.width = w;
+    canvas.height = h;
+
+    const pts = [];
+    for (let x = 0; x <= w; x += 2) {
+      const y = h/2
+        + Math.sin(x * freq * 0.05) * amp
+        + Math.sin(x * freq * 0.13) * amp * 0.4
+        + (Math.random() - 0.5) * noiseAmt;
+      pts.push({ x, y: Math.max(1, Math.min(h-1, y)) });
+    }
+
+    let drawn = 0;
+    function anim() {
+      drawn += 5;
+      ctx.clearRect(0, 0, w, h);
+      ctx.setLineDash([2,4]);
+      ctx.strokeStyle = 'rgba(100,149,237,0.15)';
+      ctx.lineWidth = 0.5;
+      ctx.beginPath(); ctx.moveTo(0,h/2); ctx.lineTo(w,h/2); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.beginPath();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.3;
+      for (let i = 0; i < Math.min(drawn, pts.length); i++) {
+        if (i === 0) ctx.moveTo(pts[i].x, pts[i].y);
+        else ctx.lineTo(pts[i].x, pts[i].y);
+      }
+      ctx.stroke();
+      if (drawn < pts.length) requestAnimationFrame(anim);
+    }
+    anim();
+  }, delay);
+}
+
+function drawAllWaves(sm) {
+  sm = sm || 1;
+  drawWave('wave1', 7*sm, 2.5, '#6495ED', 1.5, 100);
+  drawWave('wave2', 5*sm, 1.2, '#6495ED', 0.8, 250);
+  drawWave('wave3', 9*sm, 3.8, '#6495ED', 2,   400);
+  drawWave('wave4', 6*sm, 1.8, '#6495ED', 1,   550);
+}
+drawAllWaves();
+setInterval(() => drawAllWaves(), 8000);
+
+/* ══════════════════════════════════════
+   TYPEWRITER
+══════════════════════════════════════ */
+function typeText(elId, text, speed, cb) {
+  const el = document.getElementById(elId);
+  el.innerHTML = '';
+  let i = 0;
+  const cursor = '<span class="typing-cursor"></span>';
+  function type() {
+    if (i < text.length) {
+      el.innerHTML = text.substring(0, i+1) + cursor;
+      i++;
+      setTimeout(type, speed + Math.random() * 25);
+    } else {
+      el.innerHTML = text + cursor;
+      if (cb) cb();
+    }
+  }
+  type();
+}
+
+/* ══════════════════════════════════════
+   SLIDER
+══════════════════════════════════════ */
+function updateSlider(v) {
+  document.getElementById('sliderVal').textContent = v;
+  globalStress = parseInt(v);
+}
+
+/* ══════════════════════════════════════
+   FORM TRACKING
+══════════════════════════════════════ */
+const trackFields = ['fullName','subjectId','dob','caseRef','heartRate','bloodPressure','respRate','examinerNotes'];
+
+trackFields.forEach((id, i) => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener('input', () => {
+    const dot = document.getElementById('pd'+i);
+    if (el.value.trim()) {
+      el.classList.add('filled');
+      if (dot) dot.classList.add('done');
+    } else {
+      el.classList.remove('filled');
+      if (dot) dot.classList.remove('done');
+    }
+    if (id === 'stressLevel') globalStress = parseInt(el.value) || 5;
+  });
+});
+
+document.getElementById('gsr').addEventListener('change', function() {
+  this.classList.toggle('filled', this.value !== '');
+});
+
+/* ══════════════════════════════════════
+   GSAP PAPER FEED
+══════════════════════════════════════ */
+function animatePaperFeed() {
+  const wrap = document.getElementById('paperContentWrap');
+
+  // Reset
+  gsap.set(wrap, { clipPath: 'inset(0 0 100% 0)' });
+
+  const tl = gsap.timeline();
+
+  // Knobs jolt
+  tl.to(['#k1','#k2','#k3','#k4'], {
+    rotation: '+=30',
+    duration: 0.12,
+    stagger: 0.04,
+    ease: 'power2.out',
+    yoyo: true,
+    repeat: 5
+  });
+
+  // Paper feeds upward (reveal from bottom)
+  tl.to(wrap, {
+    clipPath: 'inset(0 0 0% 0)',
+    duration: 2.8,
+    ease: 'none'
+  }, '-=0.3');
+
+  // Tiny settle bounce
+  tl.to(wrap, {
+    y: 5, duration: 0.1, ease: 'power2.out', yoyo: true, repeat: 2
+  });
+
+  // Knobs slow stop
+  tl.to(['#k1','#k2','#k3','#k4'], {
+    rotation: '+=8',
+    duration: 0.6,
+    stagger: 0.08,
+    ease: 'power3.out'
+  }, '-=0.4');
+
+  // Verdict stamp appears
+  tl.to('#verdictStamp', {
+    opacity: 1,
+    duration: 0.4,
+    ease: 'power2.out'
+  }, '-=0.2');
+}
+
+/* ══════════════════════════════════════
+   BUILD REPORT CONTENT
+══════════════════════════════════════ */
+function buildReport() {
+  const name    = document.getElementById('fullName').value || 'UNKNOWN';
+  const sid     = document.getElementById('subjectId').value || 'N/A';
+  const dob     = document.getElementById('dob').value || '--';
+  const caseRef = document.getElementById('caseRef').value || 'CASE-0000';
+  const hr      = document.getElementById('heartRate').value || '88';
+  const bp      = document.getElementById('bloodPressure').value || '138/92';
+  const rr      = document.getElementById('respRate').value || '18';
+  const gsr     = document.getElementById('gsr').value || 'ELEVATED';
+  const stress  = document.getElementById('stressLevel').value || '5';
+  const notes   = document.getElementById('examinerNotes').value || 'NONE';
+  const sn      = parseInt(stress);
+
+  const demEl = document.querySelector('input[name="demeanor"]:checked');
+  const demeanor = demEl ? demEl.value.toUpperCase() : 'UNSPECIFIED';
+
+  const cbs = document.querySelectorAll('input[type="checkbox"]:checked');
+  const expressions = Array.from(cbs).map(c => c.value.replace('_',' ').toUpperCase()).join(', ') || 'NONE NOTED';
+
+  let verdict = 'INCONCLUSIVE';
+  if (sn >= 8) verdict = 'DECEPTION DETECTED';
+  else if (sn <= 3) verdict = 'TRUTHFUL';
+
+  // Update verdict stamp
+  document.getElementById('verdictText').textContent = verdict;
+  document.getElementById('verdictStamp').style.borderColor = sn >= 8 ? '#cc0000' : sn <= 3 ? '#3a7a3a' : '#888';
+  document.getElementById('verdictText').style.color = sn >= 8 ? '#cc0000' : sn <= 3 ? '#3a7a3a' : '#555';
+
+  // Date
+  const now = new Date();
+  document.getElementById('paperDate').textContent =
+    'PRINTED: ' + now.toLocaleDateString('en-US') + ' ' + now.toLocaleTimeString('en-US') +
+    '\nEXAMINER AUTHORIZED · FORM PG-94B';
+
+  // Readings table
+  const tbl = document.getElementById('readingsTable');
+  tbl.style.display = 'table';
+  const tbody = document.getElementById('readingsBody');
+  const readings = [
+    { p:'PULSE',       v: hr+' BPM',  s: parseInt(hr) > 90 ? 'elevated' : 'normal' },
+    { p:'BLOOD PRESS.',v: bp,          s: (bp.includes('14')||bp.includes('15')) ? 'critical' : 'normal' },
+    { p:'RESP. RATE',  v: rr+' br/m', s: parseInt(rr) > 20 ? 'elevated' : 'normal' },
+    { p:'GSR',         v: gsr,         s: gsr==='CRITICAL'?'critical':gsr==='ELEVATED'||gsr==='HIGH'?'elevated':'normal' },
+    { p:'STRESS IDX',  v: stress+'/10', s: sn>=8?'critical':sn>=5?'elevated':'normal' },
+  ];
+  tbody.innerHTML = readings.map(r =>
+    `<tr><td>${r.p}</td><td>${r.v}</td><td><span class="r-dot r-${r.s}"></span>${r.s.toUpperCase()}</td></tr>`
+  ).join('');
+
+  // Type report text
+  const reportText =
+    'SUBJECT: ' + name.toUpperCase() + '\n' +
+    'ID: ' + sid + ' | DOB: ' + dob + '\n' +
+    'REF: ' + caseRef + '\n' +
+    '─────────────────────\n' +
+    'PULSE: ' + hr + 'BPM | B/P: ' + bp + '\n' +
+    'RESP: ' + rr + ' | GSR: ' + gsr + '\n' +
+    'STRESS: ' + stress + '/10\n' +
+    'DEMEANOR: ' + demeanor + '\n' +
+    'MICRO-EXP: ' + expressions + '\n' +
+    '─────────────────────\n' +
+    'NOTES: ' + notes.toUpperCase().substring(0, 60) + '\n' +
+    '─────────────────────\n' +
+    'VERDICT: ' + verdict;
+
+  typeText('resultText', reportText, 35, () => {
+    // Redraw waves with stress
+    drawAllWaves(0.5 + sn/10 * 1.5);
+  });
+
+  // Update global stress for live graph
+  globalStress = sn;
+}
+
+/* ══════════════════════════════════════
+   SUBMIT
+══════════════════════════════════════ */
+function submitForm() {
+  if (!document.getElementById('fullName').value.trim()) {
+    gsap.fromTo('#fullName',
+      { x: -5 }, { x: 0, duration: 0.4, ease: 'elastic.out(1,0.3)' }
+    );
+    gsap.to('#fullName', { borderBottomColor: '#aa0000', duration: 0.2, yoyo: true, repeat: 3 });
+    return;
+  }
+
+  gsap.to('#submitBtn', { scale: 0.96, duration: 0.1, yoyo: true, repeat: 1 });
+
+  const overlay = document.getElementById('procOverlay');
+  overlay.classList.add('active');
+
+  const bar = document.getElementById('procBar');
+  bar.style.animation = 'none';
+  bar.offsetHeight;
+  bar.style.animation = 'proc-fill 2.5s ease-out forwards';
+
+  const msgs = [
+    'ANALYZING SUBJECT...', 'READING BIOMETRICS...', 'CHECKING DECEPTION MARKERS...',
+    'CROSS-REFERENCING RECORDS...', 'COMPUTING TRUTH INDEX...', 'GENERATING REPORT...'
+  ];
+  let mi = 0;
+  const ticker = setInterval(() => {
+    document.getElementById('procText').textContent = msgs[mi % msgs.length];
+    mi++;
+  }, 420);
+
+  setTimeout(() => {
+    clearInterval(ticker);
+    overlay.classList.remove('active');
+    buildReport();
+    setTimeout(animatePaperFeed, 200);
+  }, 2600);
+}
+
+/* ══════════════════════════════════════
+   IDLE TEXT
+══════════════════════════════════════ */
+setTimeout(() => {
+  typeText('resultText',
+    'UNIT 94-B ONLINE.\nAWAITING SUBJECT DATA.\nFILL FORM TO INITIATE\nPOLYGRAPH SEQUENCE.',
+    50
+  );
+}, 1000);
+</script>
+</body>
+</html>
+```
